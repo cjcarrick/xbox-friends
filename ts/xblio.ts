@@ -62,7 +62,7 @@ type Friends = {
     tournamentSummary: null
     presenceState: string
     titleSummaries: null
-    socialManager: { pages: []; titleIds: [] }
+    socialManager: { pages: unknown[]; titleIds: unknown[] }
     displayName: string
   }[]
 }

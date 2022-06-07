@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns'
-import { SearchResults, Friends, Presence } from './types'
+import { SearchResults, Friends, Presence } from './xblio'
 import express from 'express'
 import fetch from 'cross-fetch'
 import dotenv from 'dotenv'
@@ -47,32 +47,33 @@ async function getXuid(gamertag: string) {
   }
 }
 
-async function getFriends(xuid: string) {
-  console.log('starting')
+/** The object that pug expects. Defined here to ensure consistency. */
+type FriendsObject = {
+  people: {
+    name?: string
+    img?: string
+    status?: 'Online' | 'Offline'
+    rich?: string
+  }[]
+}
 
-  // we will get friends for this xuid. Find xuids at xbl.io
-  // Supplying is done ahead of time because searching for the xuid of a gamertag every time would increase execution time by 50%
+/** Used when profile pictures are unavalible. */
+const placeholderImg = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'
 
-  const placeholderImg = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'
+async function getFriends(xuid: string): Promise<FriendsObject> {
+  console.log(`[XUID ${xuid}] Searching for friends`)
 
   const friendsList = (await (await fetch('https://xbl.io/api/v2/friends?xuid=' + xuid, { headers })).json()) as Friends
 
-  console.log('got friends list')
+  console.log(`[XUID ${xuid}] Found ${friendsList.people.length} friends`)
 
   const presenceList = (await (
     await fetch(`https://xbl.io/api/v2/${friendsList.people.map(p => p.xuid)}/presence`, { headers })
   ).json()) as Presence
 
-  console.log('got presence list')
+  console.log(`[XUID ${xuid}] Found ${presenceList.length} presence records`)
 
-  let res: {
-    people: {
-      name?: string
-      img?: string
-      status?: 'Online' | 'Offline'
-      rich?: string
-    }[]
-  } = { people: [] }
+  let res: FriendsObject = { people: [] }
 
   presenceList
     // sort alphabetically by gamertag
@@ -85,9 +86,9 @@ async function getFriends(xuid: string) {
     // move online players to the top
     .sort((a, b) => (a.state == 'Online' ? -1 : 1))
 
-    // add rows to table
+    // append to the result
     .forEach(p => {
-      let obj: typeof res['people'][number] = {}
+      let obj: FriendsObject['people'][number] = {}
 
       const listDat = friendsList.people.find(f => f.xuid === p.xuid)
       obj.name = listDat.displayName
@@ -95,6 +96,7 @@ async function getFriends(xuid: string) {
       obj.status = p.state
 
       if ('lastSeen' in p) {
+        // Filter out "Home" and "Online" titles
         if (p.lastSeen.titleName == 'Home' || p.lastSeen.titleName == 'Online') {
           obj.rich = `Last seen ${formatDistanceToNow(new Date(p.lastSeen.timestamp))} ago`
         } else {
@@ -103,6 +105,7 @@ async function getFriends(xuid: string) {
       } else if ('devices' in p) {
         p.devices.forEach(d => {
           d.titles.forEach(t => {
+            // Filter out "Home" and "Online" titles
             if (t.name == 'Home' || t.name == 'Online') {
               obj.rich = `Online for ${formatDistanceToNow(new Date(t.lastModified))}`
             } else {
