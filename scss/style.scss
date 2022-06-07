@@ -1,0 +1,156 @@
+$bg: hsl(0, 0%, 100%);
+$bgAlt: hsl(197, 8%, 95%);
+$fg: hsl(0, 0%, 22%);
+$fgAlt: hsl(0, 0%, 26%);
+$color: hsl(239, 71%, 68%);
+$green: hsl(107, 33%, 63%);
+$gray: hsl(0, 0%, 50%);
+
+:root {
+  --bg: #{$bg};
+  --bg-alt: #{$bgAlt};
+  --fg: #{$fg};
+  --fg-alt: #{$fgAlt};
+}
+
+// dark mode
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #{$fg};
+    --bg-alt: #{$fgAlt};
+    --fg: #{$bg};
+    --fg-alt: #{$bgAlt};
+  }
+}
+
+@mixin ms-depth($amount) {
+  box-shadow: 0 ceil(10 * 0.404 * $amount + 0.178) * 0.1 + 0px ceil(10 * 0.904 * $amount + 0.178) * 0.1 + 0px 0
+      rgba(0, 0, 0, ceil(10 * 0.0036 * $amount + 0.152) * 0.1 + 0),
+    0 ceil(10 * 0.0768 * $amount + 0.0544) * 0.1 + 0px ceil(10 * 0.227 * $amount + 0.177) * 0.1 + 0px 0
+      rgba(0, 0, 0, ceil(10 * 0.00152 * $amount + 0.136) * 0.1 + 0);
+}
+
+body {
+  font-family: -apple-system, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  padding: 0;
+  margin: 0;
+}
+
+* {
+  font-size: 1rem;
+  margin: 0;
+}
+
+footer {
+  background-color: var(--bg-alt);
+  padding: 2rem;
+  text-align: center;
+}
+
+main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+a {
+  color: $color;
+  text-decoration: none;
+  font-style: italic;
+
+  &:hover,
+  &:focus,
+  &:active {
+    text-decoration: underline;
+  }
+}
+
+input[type='text'] {
+  border: none;
+  background-color: var(--bg-alt);
+  color: var(--fg);
+
+  // remove the default border
+  &:focus {
+    outline: none;
+  }
+}
+
+button[type='submit'] {
+  border: none;
+  background-color: $color;
+  color: $bgAlt;
+}
+
+::placeholder {
+  color: var(--fg);
+  opacity: 0.33;
+  font-style: italic;
+}
+
+form {
+  width: fit-content;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  margin-bottom: 18rem;
+
+  > * {
+    padding: 0.5rem;
+  }
+
+  @include ms-depth(4);
+  border-radius: 0.25rem;
+
+  input[type='text'] {
+    border-radius: 0.25rem 0 0 0.25rem;
+  }
+  button[type='submit'] {
+    border-radius: 0 0.25rem 0.25rem 0;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  gap: 0.75rem;
+
+  align-self: stretch;
+
+  @include ms-depth(18);
+
+  img {
+    width: 4rem;
+    height: 4rem;
+    min-width: 4rem;
+    min-height: 4rem;
+    border-radius: 100%;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  border-left: 0.5rem solid $gray;
+
+  &.Online {
+    border-left-color: $green;
+  }
+
+  &:last-child {
+    margin-bottom: 4rem;
+  }
+}

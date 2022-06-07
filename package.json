@@ -1,0 +1,32 @@
+{
+  "name": "xbox-friends",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=17.9.0"
+  },
+  "scripts": {
+    "watch": "export NODE_ENV=development && webpack --watch",
+    "dev": "export NODE_ENV=development && nodemon --ext js,scss dist/index.js",
+    "build": "export NODE_ENV=production && webpack",
+    "start": "export NODE_ENV=production && node dist/index.js"
+  },
+  "dependencies": {
+    "cross-fetch": "^3.1.5",
+    "date-fns": "^2.28.0",
+    "dotenv": "^16.0.1",
+    "esbuild-loader": "^2.19.0",
+    "express": "^4.18.1",
+    "pug": "^3.0.2",
+    "pug-loader": "^2.4.0",
+    "sass": "^1.52.2",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.40",
+    "@types/pug": "^2.0.6",
+    "nodemon": "^2.0.16"
+  }
+}

@@ -1,0 +1,11 @@
+extends index 
+
+block content 
+  each p in people
+    .card(class=p.status)
+      img(src=p.img)
+      .text 
+        h2= p.name 
+        h4= p.status 
+        if (p.rich)
+          p= p.rich

@@ -1,0 +1,34 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(rel="stylesheet" href="/style.css" type="text/css")
+
+    if process.env.NODE_ENV = 'development'
+      script.
+        function reloadCss() {
+          console.log("reloading css")
+          var links = document.getElementsByTagName("link");
+          for (var cl in links)  {
+            var link = links[cl];
+            if (link.rel === "stylesheet") link.href += "";
+          }
+        }
+        document.addEventListener('keydown', function(e) {
+          console.log(e)
+          if (e.keyCode == 82) reloadCss();
+        })
+
+
+    title
+      block title
+        | Xbox Friends
+
+  body 
+    main
+      block content
+
+    footer 
+      a(href="https://www.github.com/cjcarrick/xbox-friends") Source
