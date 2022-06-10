@@ -138,13 +138,13 @@ form {
   padding: 0.75rem;
   align-self: stretch;
 
-  @include ms-depth(18);
-
-  img {
+  object,
+  object > img {
     width: 4rem;
     height: 4rem;
     min-width: 4rem;
     min-height: 4rem;
+    border-radius: 100%;
     border-radius: 100%;
   }
 

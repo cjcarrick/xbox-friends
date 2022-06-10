@@ -22,6 +22,6 @@ yarn && yarn watch & yarn dev
 
 #### TODO
 
-- [ ] Add fallbacks for profile pictures that fail to load on the DOM
+- [x] Add fallbacks for profile pictures that fail to load on the DOM
 - [ ] Alphabetize the friends list
 - [ ] Find a faster API

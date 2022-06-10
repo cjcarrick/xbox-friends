@@ -2,8 +2,11 @@ extends index
 
 block content 
   each p in people
-    .card(class=p.status)
-      img(src=p.img)
+    .card(class=(indicatorStyle == 'both' || indicatorStyle == 'text') ? p.status : '')
+      if p.img
+        //- backup image
+        object(data="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png" type="image/png")
+          img(src=p.img)
       .text 
         h2= p.name 
         h4= p.status 
