@@ -1,0 +1,127 @@
+// used for online players
+$green: hsl(107, 36%, 57%);
+
+// used for offline players
+$gray: hsl(0, 0%, 50%);
+
+:root {
+  --fg: hsl(0, 0%, 13%);
+  --fg-alt: hsl(0, 0%, 44%);
+  --bg: hsl(119, 8%, 98.5%);
+  --bg-alt: hsl(119, 3%, 95%);
+}
+
+// stolen from Microsoft's Fluent UI
+@mixin ms-depth($amount) {
+  box-shadow: 0 ceil(10 * 0.404 * $amount + 0.178) * 0.1 + 0px ceil(10 * 0.904 * $amount + 0.178) * 0.1 + 0px 0
+      rgba(0, 0, 0, ceil(10 * 0.0036 * $amount + 0.152) * 0.1 + 0),
+    0 ceil(10 * 0.0768 * $amount + 0.0544) * 0.1 + 0px ceil(10 * 0.227 * $amount + 0.177) * 0.1 + 0px 0
+      rgba(0, 0, 0, ceil(10 * 0.00152 * $amount + 0.136) * 0.1 + 0);
+}
+
+@media (prefers-color-scheme: light) {
+  // form {
+  //   @include ms-depth(4);
+  // }
+  .card {
+    @include ms-depth(4);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: hsl(0, 0%, 87%);
+    --fg-alt: hsl(0, 0%, 66%);
+    --bg: hsl(0, 0%, 15%);
+    --bg-alt: hsl(0, 0%, 19%);
+  }
+  .card,
+  input[type='checbkox'] + label:after {
+    background-color: var(--bg-alt);
+  }
+}
+
+body {
+  font-family: -apple-system, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  padding: 0;
+  margin: 0;
+  color: var(--fg-alt);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--fg);
+}
+
+* {
+  // forces headings to all have the same font size
+  font-size: 1rem;
+  // removes margins from headings
+  margin: 0;
+}
+
+footer {
+  background-color: var(--bg-alt);
+  padding: 2rem;
+  text-align: center;
+}
+
+main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+a {
+  color: $green;
+  text-decoration: none;
+  font-style: italic;
+
+  &:hover,
+  &:focus,
+  &:active {
+    text-decoration: underline;
+  }
+}
+
+input[type='text'] {
+  border: none;
+  background-color: var(--bg-alt);
+  color: var(--fg);
+
+  // remove the default border
+  &:focus {
+    outline: none;
+  }
+}
+
+button[type='submit'] {
+  border: none;
+  background-color: $green;
+  color: #fff;
+}
+
+::placeholder {
+  color: var(--fg);
+  opacity: 0.33;
+  font-style: italic;
+}
+
+.banner {
+  background-color: rgb(222, 106, 95);
+  color: #fff;
+  padding: 0.5rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+}

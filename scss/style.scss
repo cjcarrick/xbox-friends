@@ -1,128 +1,130 @@
-$bg: hsl(0, 0%, 100%);
-$bgAlt: hsl(197, 8%, 95%);
-$fg: hsl(0, 0%, 22%);
-$fgAlt: hsl(0, 0%, 26%);
-$color: hsl(239, 71%, 68%);
-
-// used for online players
-$green: hsl(107, 33%, 63%);
-
-// used for offline players
-$gray: hsl(0, 0%, 50%);
-
-:root {
-  --bg: #{$bg};
-  --bg-alt: #{$bgAlt};
-  --fg: #{$fg};
-  --fg-alt: #{$fgAlt};
-}
-
-// dark mode
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #{$fg};
-    --bg-alt: #{$fgAlt};
-    --fg: #{$bg};
-    --fg-alt: #{$bgAlt};
-  }
-}
-
-// stolen from Microsoft's Fluent UI
-@mixin ms-depth($amount) {
-  box-shadow: 0 ceil(10 * 0.404 * $amount + 0.178) * 0.1 + 0px ceil(10 * 0.904 * $amount + 0.178) * 0.1 + 0px 0
-      rgba(0, 0, 0, ceil(10 * 0.0036 * $amount + 0.152) * 0.1 + 0),
-    0 ceil(10 * 0.0768 * $amount + 0.0544) * 0.1 + 0px ceil(10 * 0.227 * $amount + 0.177) * 0.1 + 0px 0
-      rgba(0, 0, 0, ceil(10 * 0.00152 * $amount + 0.136) * 0.1 + 0);
-}
-
-body {
-  font-family: -apple-system, Helvetica, Arial, sans-serif;
-  background-color: var(--bg);
-  color: var(--fg);
-  padding: 0;
-  margin: 0;
-}
-
-* {
-  // forces headings to all have the same font size
-  font-size: 1rem;
-  // removes margins from headings
-  margin: 0;
-}
-
-footer {
-  background-color: var(--bg-alt);
-  padding: 2rem;
-  text-align: center;
-}
-
-main {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  max-width: 24rem;
-  margin: 0 auto;
-}
-
-a {
-  color: $color;
-  text-decoration: none;
-  font-style: italic;
-
-  &:hover,
-  &:focus,
-  &:active {
-    text-decoration: underline;
-  }
-}
-
-input[type='text'] {
-  border: none;
-  background-color: var(--bg-alt);
-  color: var(--fg);
-
-  // remove the default border
-  &:focus {
-    outline: none;
-  }
-}
-
-button[type='submit'] {
-  border: none;
-  background-color: $color;
-  color: $bgAlt;
-}
-
-::placeholder {
-  color: var(--fg);
-  opacity: 0.33;
-  font-style: italic;
-}
+@import './base.scss';
 
 form {
+  width: min(80vw, 24rem);
   display: flex;
-  flex-direction: row;
-  align-items: stretch;
+  flex-direction: column;
+  justify-content: stretch;
+  gap: 2rem;
+  position: relative;
 
-  margin-bottom: 18rem;
-  width: fit-content;
+  .searchbar {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
 
-  > * {
-    padding: 0.5rem;
+    > * {
+      padding: 0.5rem;
+    }
+
+    border-radius: 0.25rem;
+
+    input[type='text'] {
+      border-radius: 0.25rem 0 0 0.25rem;
+      flex: 1;
+      display: block;
+    }
+    button[type='submit'] {
+      border-radius: 0 0.25rem 0.25rem 0;
+    }
   }
 
-  @include ms-depth(4);
-  border-radius: 0.25rem;
+  .settings {
+    width: 100%;
 
-  input[type='text'] {
-    border-radius: 0.25rem 0 0 0.25rem;
+    summary {
+      color: var(--fg-alt);
+      font-style: italic;
+      text-align: center;
+      text-decoration: underline;
+      cursor: pointer;
+
+      list-style: none;
+      &::marker {
+        display: none;
+      }
+
+      &::after {
+        content: 'Options';
+      }
+    }
+    &[open] {
+      summary:after {
+        content: 'Close';
+      }
+    }
+
+    > label {
+      display: flex;
+      flex-direction: row;
+      gap: 2rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    > * + * {
+      margin-top: 1rem;
+    }
   }
-  button[type='submit'] {
-    border-radius: 0 0.25rem 0.25rem 0;
+}
+
+input[type='checkbox'] {
+  display: none;
+
+  // add default box-sizing for this scope
+  &,
+  &:after,
+  &:before,
+  & *,
+  & *:after,
+  & *:before,
+  & + label {
+    box-sizing: border-box;
+    &::selection {
+      background: none;
+    }
+  }
+
+  + label {
+    outline: 0;
+    display: block;
+    width: 4em;
+    min-width: 4em;
+    height: 2em;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    &:after,
+    &:before {
+      position: relative;
+      display: block;
+      content: '';
+      width: 50%;
+      height: 100%;
+    }
+
+    &:before {
+      display: none;
+    }
+    background: var(--bg-alt);
+    border-radius: 2em;
+    padding: 2px;
+    transition: all 0.4s ease;
+    &:after {
+      left: 0;
+      border-radius: 50%;
+      background: var(--bg);
+      transition: all 0.2s ease;
+      @include ms-depth(6);
+    }
+  }
+
+  &:checked + label {
+    background: $green;
+
+    &:after {
+      left: 50%;
+    }
   }
 }
 
@@ -131,10 +133,6 @@ form {
   flex-direction: row;
   gap: 0.75rem;
   align-items: center;
-
-  border-left: 0.5rem solid $gray;
-  border-radius: 0.5rem;
-
   padding: 0.75rem;
   align-self: stretch;
 
@@ -154,10 +152,19 @@ form {
     gap: 0.25rem;
   }
 
+  &.Online,
+  &.Away,
+  &.Offline {
+    border-left: 0.5rem solid $gray;
+    border-radius: 0.5rem;
+  }
   &.Online {
     border-left-color: $green;
   }
 
+  &:first-child {
+    margin-top: 4rem;
+  }
   &:last-child {
     margin-bottom: 4rem;
   }

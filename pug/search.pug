@@ -1,0 +1,53 @@
+extends index 
+
+block content
+  if error
+    .banner= error 
+
+  form(action="/" method="get") 
+
+    .searchbar
+      input(type="text" name="gt" placeholder="Enter Gamertag")
+      button(type="submit") Search
+
+    details.settings
+      summary
+
+      label.dropdown
+        | Sort order
+        select(name="sortOrder") 
+          option(value="alphabetical" selected=(sortOrder == 'alphabetical')) Name 
+          option(value="game" selected=(sortOrder == 'game')) Game
+          option(value="lastOnline" selected=(sortOrder == 'lastOnline')) Time Online
+
+      label.dropdown
+        | Indicator style
+        select(name="indicatorStyle") 
+          option(value="border" selected=(indicatorStyle == 'border')) Border
+          option(value="text" selected=(indicatorStyle == 'text')) Text
+          option(value="both" selected=(indicatorStyle == 'both')) Both
+
+      label.toggle
+        | Only show online friends
+        input#cb1(type="checkbox" name="onlineOnly" checked=onlineOnly) 
+        label(for="cb1")
+
+      label.toggle
+        | Show what games friends are or were playing
+        input#cb2(type="checkbox" name="games" checked=games)
+        label(for="cb2")
+
+      label.toggle
+        | Show how long ago friends were online
+        input#cb3(type="checkbox" name="lastSeenTime" checked=lastSeenTime)
+        label(for="cb3")
+
+      label.toggle
+        | Show how long friends have been playing a game
+        input#cb4(type="checkbox" name="playingTime" checked=playingTime)
+        label(for="cb4")
+
+      label.toggle
+        | Show friends' icons
+        input#cb5(type="checkbox" name="icons" checked=icons)
+        label(for="cb5")

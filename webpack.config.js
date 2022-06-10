@@ -30,6 +30,6 @@ module.exports = {
   },
   plugins: [new CopyPlugin({ patterns: [{ from: './assets/', to: './static/' }] })],
   optimization: {
-    minimizer: [new ESBuildMinifyPlugin({ target: 'es2021' })]
+    minimizer: [new ESBuildMinifyPlugin({ target: 'es2021', drop: ['console'] })]
   }
 }

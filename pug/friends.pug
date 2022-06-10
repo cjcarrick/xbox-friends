@@ -5,10 +5,11 @@ block content
     .card(class=(indicatorStyle == 'both' || indicatorStyle == 'text') ? p.status : '')
       if p.img
         //- backup image
-        object(data="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png" type="image/png")
-          img(src=p.img)
+        object(data=p.img type="image/png")
+          img(src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png")
       .text 
         h2= p.name 
-        h4= p.status 
+        if (indicatorStyle == 'both' || indicatorStyle == 'text')
+          h4= p.status 
         if (p.rich)
           p= p.rich
