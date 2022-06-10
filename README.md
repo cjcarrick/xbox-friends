@@ -23,5 +23,7 @@ yarn && yarn watch & yarn dev
 #### TODO
 
 - [x] Add fallbacks for profile pictures that fail to load on the DOM
-- [ ] Alphabetize the friends list
+- [x] Alphabetize the friends list
+  - [x] Add more sorting functions
 - [ ] Find a faster API
+  - [ ] Perhaps one that can get gamerpics for users with avatars as their profile picture. Xbl.io doesn't have images for these
