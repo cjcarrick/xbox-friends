@@ -75,11 +75,11 @@ type FriendsObject = {
 const options = (req: Request) => ({
   sortOrder: req.query.sortOrder || 'lastOnline',
   indicatorStyle: req.query.indicatorStyle || 'border',
-  onlineOnly: req.query.onlineOnly == 'on' || false,
-  games: req.query.games == 'on' || true,
-  lastSeenTime: req.query.lastSeenTime == 'on' || true,
-  playingTime: req.query.playingTime == 'on' || true,
-  icons: req.query.icons == 'on' || true
+  onlineOnly: req.query.onlineOnly,
+  games: req.query.games,
+  lastSeenTime: req.query.lastSeenTime,
+  playingTime: req.query.playingTime,
+  icons: req.query.iconse
 })
 
 function searchPage(req: Request, res: Response) {
@@ -113,11 +113,7 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
     if (!presenceList.length) throw new Error('No presence data')
     console.log(`[XUID ${xuid}] Found ${presenceList.length} presence records`)
   } catch (e) {
-    // remove xuid from query string
-    req.query = Object.entries(req.query)
-      .filter(([k]) => k !== 'xuid' && k !== 'gt')
-      .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
-    return res.redirect('/?' + queryStr({ ...req.query, error: 'Could not find presence records. Please try again.' }))
+    return res.redirect('/?' + queryStr({ ...options(req), error: 'Could not find presence records. Please try again.' }))
   }
 
   const people: {
