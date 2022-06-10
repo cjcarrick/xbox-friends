@@ -1,11 +1,12 @@
 const path = require('path')
 const { ESBuildMinifyPlugin } = require('esbuild-loader')
+const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   entry: path.join(__dirname, 'ts', 'index.ts'),
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'index.js',
+    filename: 'index.js'
   },
   externals: require('webpack-node-externals')(),
   target: 'node',
@@ -17,17 +18,18 @@ module.exports = {
         exclude: /node_modules/,
         options: {
           loader: 'ts',
-          target: 'es6',
-        },
+          target: 'es6'
+        }
       },
       {
         test: /.pug/,
         exclude: /node_modules/,
-        use: ['pug-loader'],
-      },
-    ],
+        use: ['pug-loader']
+      }
+    ]
   },
+  plugins: [new CopyPlugin({ patterns: [{ from: './assets/', to: './static/' }] })],
   optimization: {
-    minimizer: [new ESBuildMinifyPlugin({ target: 'es2021' })],
-  },
+    minimizer: [new ESBuildMinifyPlugin({ target: 'es2021' })]
+  }
 }
