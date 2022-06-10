@@ -2,7 +2,7 @@ extends index
 
 block content 
   each p in people
-    .card(class=(indicatorStyle == 'both' || indicatorStyle == 'border') ? p.status : '')
+    a.card(class=(indicatorStyle == 'both' || indicatorStyle == 'border') ? p.status : '' href=p.url)
       if p.img
         //- backup image
         object(data=p.img type="image/png")

@@ -144,13 +144,23 @@ input[type='checkbox'] {
     min-width: 4rem;
     min-height: 4rem;
     border-radius: 100%;
-    border-radius: 100%;
   }
 
   .text {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+  }
+
+  // Fix for having the .card element be a link
+  .text {
+    font-style: normal;
+    p {
+      color: var(--fg-alt);
+    }
+  }
+  &:hover {
+    text-decoration: none;
   }
 
   &.Online,

@@ -67,6 +67,7 @@ type FriendsObject = {
     img?: string
     status?: 'Online' | 'Offline'
     rich?: string
+    url: string
   }[]
 }
 
@@ -234,13 +235,14 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
 
   presenceList.sort(sortFn).forEach(p => {
     if (p.state == 'Offline' && onlineOnly) return
-
-    const obj: FriendsObject['people'][number] = {}
-
     const listDat = peopleList.find(f => f.xuid === p.xuid)
-    obj.name = listDat.displayName
-    obj.img = icons ? listDat.displayPicRaw : ''
-    obj.status = p.state
+
+    const obj: FriendsObject['people'][number] = {
+      name: listDat.displayName,
+      img: icons ? listDat.displayPicRaw : '',
+      status: p.state,
+      url: `/?xuid=${p.xuid}&${queryStr(options(req))}`
+    }
 
     if ('lastSeen' in p) {
       // Filter out "Home" and "Online" titles
