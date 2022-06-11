@@ -1,7 +1,7 @@
 @import './base.scss';
 
 form {
-  width: min(80vw, 24rem);
+  width: $min-width;
   display: flex;
   flex-direction: column;
   justify-content: stretch;
@@ -17,15 +17,15 @@ form {
       padding: 0.5rem;
     }
 
-    border-radius: 0.25rem;
+    border-radius: $br;
 
     input[type='text'] {
-      border-radius: 0.25rem 0 0 0.25rem;
+      border-radius: $br 0 0 $br;
       flex: 1;
       display: block;
     }
     button[type='submit'] {
-      border-radius: 0 0.25rem 0.25rem 0;
+      border-radius: 0 $br $br 0;
     }
   }
 
@@ -154,7 +154,7 @@ input[type='checkbox'] {
   align-items: center;
   padding: 0.75rem;
   align-self: stretch;
-  border-radius: 0.5rem;
+  border-radius: $br;
 
   object,
   object > img {

@@ -4,6 +4,10 @@ $green: hsl(107, 36%, 57%);
 // used for offline players
 $gray: hsl(0, 0%, 50%);
 
+$br: 0.25rem;
+$max-width: 24rem;
+$min-width: min(80vw, 24rem);
+
 :root {
   --fg: hsl(0, 0%, 13%);
   --fg-alt: hsl(0, 0%, 44%);
@@ -84,7 +88,7 @@ main {
   justify-content: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  max-width: 24rem;
+  max-width: $max-width;
   margin: 0 auto;
 }
 
@@ -131,10 +135,21 @@ button[type='submit'] {
 }
 
 .banner {
-  background-color: rgb(222, 106, 95);
-  color: #fff;
+  border-radius: $br;
   padding: 0.5rem;
-  position: absolute;
-  top: 0;
-  left: 0;
+  width: $min-width;
+  margin-bottom: auto;
+  box-sizing: border-box;
+
+  // position: absolute;
+  // top: 0.5rem;
+  // left: 50%;
+  // transform: translateX(-50%);
+  // width: calc(100vw - 1rem);
+  // max-width: $max-width;
+
+  &.error {
+    background-color: rgb(222, 106, 95);
+    color: #fff;
+  }
 }

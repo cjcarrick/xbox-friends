@@ -110,8 +110,9 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
   const { xuid } = req.query
 
   console.log(`[XUID ${xuid}] Searching for friends`)
+  // if (!xuid) res.redirect('/?' + queryStr({ ...options(req), error: 'Invalid XUID' }))
   if (!xuid) {
-    res.redirect('/?' + queryStr({ ...req.query, error: 'Invalid XUID' }))
+    return res.send(searchTemplate({ options: options(req), error: 'Invalid XUID.' })) as unknown as void
   }
 
   let peopleList: Friends['people']
@@ -130,7 +131,10 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
     if (!presenceList.length) throw new Error('No presence data')
     console.log(`[XUID ${xuid}] Found ${presenceList.length} presence records`)
   } catch (e) {
-    return res.redirect('/?' + queryStr({ options: options(req), error: 'Could not find presence records. Please try again.' }))
+    return res.send(
+      searchTemplate({ options: options(req), error: 'Could not find presence records. Please try again.' })
+    ) as unknown as void
+    // return res.redirect('/?' + queryStr({ options: options(req), error: 'Could not find presence records. Please try again.' }))
   }
 
   /**

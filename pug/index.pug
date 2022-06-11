@@ -12,8 +12,12 @@ html(lang="en")
       block title
         | Xbox Friends
 
-  body 
+  body
+
     main
+      if error
+        .banner.error= error 
+
       block content
 
     footer 
