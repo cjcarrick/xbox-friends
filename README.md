@@ -1,3 +1,7 @@
+### This `native` branch attempts to fetch data directly from Microsoft.
+
+<hr></hr>
+
 ### [xbox-friends.herokuapp.com](https://xbox-friends.herokuapp.com)
 
 Quickly check if if any of your friends on Xbox are online. Designed for mobile, but also works on desktop.

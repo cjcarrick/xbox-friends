@@ -1,0 +1,179 @@
+import fetch from 'cross-fetch'
+import { writeFileSync } from 'fs'
+import path from 'path'
+
+const checkedCookies: (keyof Cookies)[] = [
+  'MSPAuth',
+  'WLSSC',
+  'csrf',
+  // 'XBXXtkhttp://xboxlive.com',
+  'X-FD-FEATURES'
+  // 'RPSSecAuth'
+]
+
+/**
+ * account.xbox.com cookies
+ */
+type Cookies = {
+  MSPAuth: string
+  WLSSC: string
+  csrf: string
+  'X-FD-FEATURES': string
+  MUID: string
+  _clsk: string
+  'XBXXtkrp://gswp.xboxlive.com/': GSWPCookie
+  'XBXXtkhttp://gssv.xboxlive.com/': GSSVCookie
+  'AMCV_EA76ADE95776D2EC7F000101%40AdobeOrg': string
+  'XBXXtkhttp://mp.microsoft.com/': MPCookie
+  RPSSharedXboxCom: string
+  RPSSecAuth: string
+  'XBXXtkhttp://xboxlive.com': string
+  MSCC: string
+  'XBXXtkhttp://accounts.xboxlive.com': AccountsCookie
+  'AMCVS_EA76ADE95776D2EC7F000101%40AdobeOrg': string
+  ANON: string
+  graceIncr: string
+  UtcOffsetMinutes: string
+  _clck: string
+  at_check: string
+  _fbp: string
+  MSFPC: string
+  ai_session: string
+  mbox: string
+  MicrosoftApplicationsTelemetryDeviceId: string
+  NAP: string
+  mobileOverride: string
+  aam_uuid: string
+  geoCulture: string
+  aka_locale: string
+}
+
+type GSWPCookie = {
+  Token: `eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAiLCJjdHkiOiJKV1QiLCJ6aXAiOiJERUYiLCJ4NXQiOiJ0a3U4b0RNNlpGS0VidURCZEN2WWdQdGlkUWsifQ.kPPDfcnS1IJkfJBj4ORE6Bb10wR0BgX2hcyE1jLv1VZOmPyF5zgoYqc7wrS0hh2iA30P792XPzMFeJmWBO0-MxabiJuiDIdxwtreoWMvLKfSiDeULhSUH9JaVK0HV2mJAAypeBDouEjbUiy6zcABOLhnOfOAiFrDtaQn5dnC-vm8pru6t-u9U6iEA8adYMofzEMQZrrayG8iVZTIzKmTpjmvbu6wh3dyEOz16adGpWvC1RPQHQWKbU99XEqW1Hlw8Slsn2L8W4rEP04rGe8tQXkjlvFOeMP4kHknHgRakRKRYBaQlh1EXMP9RE31voJG_u3QcSmol7UzadPsxGvNBA.eglxFGpCFfS5nRYy1yrUcg.ddifBbinw3v5dt5LRG9SxyRBcG_7DRTUdkfLN2mRabbiPE2R9uufSqvZV89_ODRYZkbeift68VN_9PK4tpugfV1zGOhbVLvWaZGaH-AdNQRZRyx3ge0yJcanM-skmuaZLHQVH1lvSerBeaPIMtgQgTy8MGmXIu1P29CFRMUJlV26ITo77-pHAgJ61FIb0cxd69st9HdpNADJVczK6f7nmv5Y0zlEnooZ2W30eSH0lk68Mmj-UTHYsr74n66XvOmMGt_wjig44RgfdtXo9kxhHSbuYTcO9fc0Aq0scYyvidV1rexP1Dgb2ls0Ngd9hTFuZo6mJxWVEzHRYhAYJxzF09go-8JkGVqnQWPVnqJGXPAZ5GtrsK8hURwpSIjACPLtgM8I6rK2rDR4pNGgVFnuUuEr6GFDGEexEIBFJICE-_2pCiDRy-tvoSPhCRkZQ7BERcKBeGKPwB5wUdeeuQTRMGRezHaRTCmIQusCFvGTUlhskaCNm7inQNWR-Uhx3vL9jpZNytgzS3DYkhEis2-KxHYAWWQwtOM2OSiqFS2MWhXdW3RUFkq5ri7hVDksXDPS7C2EC-ZH7HqcqPKj_OQ3rixuhzjOjK8dI-laoKcc0gzPIR-Mb-LYe5Nk60G1FZ-Q_TsYzuAVRtGe8P99GZDVNyRryHqCFyPQ2ypsGBcb2uk-ulGJaHYnHs-XFZJzjQwZDc1uJtnOqRgEjDQerRjw4kDEYv5f_n1xVbgTTmJ4ks-DAdS_-Y1_Udus7gcMoOAT01RNUEB2OEVJcnwozBUJ_u_QE3XDx-moG-1VGYDyKr_1YlJzfbf0gG0MSmKa3xY-SshTPTlcEi_sfbpb5xTlrENLPJP1GwtMeWXkvwxqWid-zG87kZdlVDmUufu-UHeYilP80HO3Wg0Elz20GNQ2o-fVpo7o3l5P-ItJnRFLSQ3YIJXFybroRDtkJAFW51kuvQ5blVmpyr-qGGisbCKQaEFVPIw43KnK4gdFDHG_yLLS-pG6R8sncZMwKp36-ioZX7A7bHvTyVQ1E8g8Ew9vQ9Bl5U7juopMSrtjeiuDfvDifNtNCOhQQIrAo1yPqnQ0rejTlPuqfNz9NTBU_PsxeU-s4qFyEkF_7gq2sDvVDT-nuzExCPSzc6Y1wz5TbHE8Cjq4sH2chdNJDrSchpKEhrxlEYwMj-wZTwvUjbtmqsVDOO0-0wPIS1cSyGLAhPVVmjeqUOxPse1Shu7fyRsN3Y8AjgcNMFVfdgftwC2u_W0.5LVnvbhHq8pfUxqQJHhbfQ`
+  Expires: `2022-06-12T10:34:01.1163993Z`
+  TokenHash: `ZATfHk8GKXVnB1I8fhsYefdPPRG4pGh7Dn4Oy+J+V8A=`
+  ParentUserClaims: null
+  UserClaims: { agg: ''; gtg: ''; prv: ''; xid: ''; uhs: '13494125591654531239' }
+  ChildAccountCreationToken: null
+}
+type GSSVCookie = {
+  Token: `eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAiLCJjdHkiOiJKV1QiLCJ6aXAiOiJERUYiLCJ4NXQiOiJvajA5dFRfZWpQanBqeVdGUDVHM08tUzM3SFUifQ.N2DQnfIDGrtPBCDrR5FbX4y4D-iNSrACXT0RR_jejak11Sgfggrcm56RUw0K3LNQTxggjWLLGRKN66KW0iPLXtxAoNwYo721STHWgjHPXo-1Q24ZzEzAqvYdz_3u6OpUehHTrZO8XTAvr1VVCbD2T1HWWVimGZpNoRZmj07_0xVBs9YTMipdg61B7_hPKMeRpIUG4GXy8hwbaOVXIXeRbKlvKx6GDvjpYIDXiP_efrEfh5qdaqErEEwMXmHAFa1tmc3sDRWnSfcw_ndckbe7cn-xA6CGSwabYDA30wfke1gbop_K4ubMXX6jX_MFXWAlgJSavpcV94S1fdj8aFsIfw.579j3kPWVZrR3E-377I20w.rEHVfdp9Apj0ELYxrkxNVeYfxeoYHLxsCX-rNYAgHvnbNai1sk5EfnZkwHGkYY-tki8j7SAweuG-IB4ZXrCp3XB00_8E_6NfllPlNxqqnNMvg0Vw5gU46TpmZgvNRHNvrQvDkqmYPEG6hnIviaru2jhCeY0Euj0Z1iIid14A96OqHXnQWoNNjEfG_2V0_U7xmBVQzYiroZ5P04PhuE0p34df3p0YRgTQx5wHmrQvC9n__yuwZrOuJ7APnQ-7vliiAf3kAex_qRI7iE0BTdaEdQvvn5MoEw0JJFqBMuoGTwKaBDBsUs6F_VssLWFYIH8vDlDs6iQROAm3XGuWvOHfx_pxMzWUUa5Z3CcWbWWNcTsO9qKgIBt3GPqx1g_89mZZG-su7OBGkLn5Zi-cvvKPFIb1iDi6pWX8UM-rsYWlqvWQS1YGJJNiouIgWOlTseoSVdT2s95m4myc_MObU1rTpVAqPpnzwMss7p2fZVcM_Ga85YuistFAe8T7C7uaijmaXpVW0pyhg7gJ_sdTmg--BZBx0II8VX7kgCAFE2Asg79zy0DmGmmTg0fKJeNT4a2KQE97jUu5xGz2QYjXRV02aMxiaRo1ytj_EZeyNfUc4UMSJja3TpasIACpw5WYS8H6Wm-w5ASFUqWBTxvbw0ZZJcnZnPmpxPxyaEVTwyuhywBfcLVSm_rS4PYeAw3cHUa_f0V80MHIdvxQpVCmvrYpOXgaZtGu7-Rg0ZGDYNrLoXKCqJPypukRICBkksvfIVN_A9tAkbXFoh5aJ9YK3TMMFD2gApX2fcJzlQfQn5kTZIrNiJi-cRyK6lPWKIYDwschA0yInra6FQHoLNVEE3xiv4jKA-zIt-OeQ1RAOqWtu5CwNx5mI85mdR-heGP1EQEtJV5sXzXGhilVfMNguIu4GqcTQLkPc0ncnmzv9N7UEeTbkwP53FyVX4qIpdT1np9QAcl1vkESMH9AaOXt1ZE9YQ.LdSON80G3VmNws57zB24_g`
+  Expires: `2022-06-12T10:34:01.0981209Z`
+  TokenHash: `ZATfHk8GKXVnB1I8fhsYefdPPRG4pGh7Dn4Oy+J+V8A=`
+  ParentUserClaims: null
+  UserClaims: { agg: ''; gtg: ''; prv: ''; xid: ''; uhs: '13494125591654531239' }
+  ChildAccountCreationToken: null
+}
+type MPCookie = {
+  Token: `eyJlbmMiOiJBMTI4Q0JDK0hTMjU2IiwiYWxnIjoiUlNBLU9BRVAiLCJjdHkiOiJKV1QiLCJ6aXAiOiJERUYiLCJ4NXQiOiJoX3praXJPTnFWcmdTUHdvWnI3LWVyU2NNbTQifQ.EDsO5MzkpBIejIgPkzSJY_RQNYFG55ylLemqz9q9EKhbFGGckbe3aSkDNuxbzhyRG-HbFJ2Ka0JaHlOSDlE08RZQbN-sCmdn2c9vwHHXqroq9YF2nr4DB3pgyYLogT-49ljTJoeYIOGFS060IX906k9tQLGhPXQnBNZ5BHGzwKPlDf7YAKO_DsM22CU8oOoUVXYj7VVC4oafhfxnx6vNp2kykJgM9U0jWlP2FzZ6Klt9RZglbEtzoHfcA6jFauU2faX1jMu31e65hX2DFcSOMjHP-Mb6GgoZSTFjB_3A-HlnrfPFD6CiD9NQp9eWHyT_LAlWFPKrAEPnprW93KPDbQ.-yfo_mq3prgGm71ogjU5rQ.Rhb8MX3e_rUG_UR4raYcqXnJ825Oy99I65-BlnQvgQ8MJV-3onocPEg0XzTIhdPXe7CcMqLxYnymU6qURwd7WeuSuRbm8Jdt6Q-JYvH1uDICsuAtntsF7LygBwbL_PIWKT2Jz5I2cYwnR43CDGSQ80fsZQKceIbTDyBOSR9cQs4vOjEBThBFmxTOdUu3s61PxYmnHtFfKH4Sv_i7hMZwYIX0G_oo3i309szx-57Dl_Qj47d0LPj6CEj7G6KjV7OAGJxlDR7K1p6TC6_vAUQADiChfPb6Sl2fumGUcZrLAVGB0YyfHKAuDD7RZa8igIxSxRmKowxxRBfa_V3HSqhZmIB7OFdDbSgZkP02diqgB3pKq4vvbtcuXFxQr08hV5LqiRL6X2x5FoRsv6Jz4ZvEuInu5-4It15YJZEtoLPGapZjQhXoFErj0583mpWKJXk15ngHenXK9EcbehgrGOM47Uqh79Zm9xuuSADrbzPeDmqUzqDXiFphc3l64ZrXQrjcuLPaHGlfqVxBnNTjECfsCEbXpG0uTKzgcGtC7bPJxFw6qh_w-Fc6oiySOmmcYURRpMKFtbRWuRYQkFo3WH4mcr8nE04vUYXT8p-dTemoJZGHS7L58xsuskHvLy66zyH1jK9CC_-WtoEHGHum6Pjtz9r4X2h_bAHlsfwCBZg0XPv747VqvG7DiaV5U0jtJMRFj4v2tq9Uci3VxV7xVjFG2lmZQNNafriLS4ImFzLM1QyK3VmUKJx19CWHmuTWI6wpZgviaha7I2HXQBWBlUdO0L6crmUW6Ya_MJQMegHpIdteUF7unw67xvixrlMjc7JYY9kWvCHb7kBp7pddZGqOwPxjLMJOtZbpiZ9F10Hfzywzo9b4ajnQ1ITCHQn9RzRGTlARDA1SttiZNvJBef1YuC-7gq-GR5U0eeSkrvuRfLx2tMiYbXwsdM20KSD0fnl82t3oXIjfxAMfkz5TymbnGNc-s834YOkDflmn1l4stnes7egL0wWQvX2hpItnX5gN-M1-mcxD1Ea8USi5NWKeOGzvNiUHv23zv2KlVFNvzzwnR7tPDLE7e0LuuG9OW-9jzhVGuNsQeR4ecitfvDfmPEB5_qRlfjYM6o1gW4RouiUrwR98t2jLHr6zs6bTv1c9juxo-axPtJT3p5SzfnahOQb6rMlJBGYlwcnaZZIswEaU8Q10H_H9FKUGatie-ZX53mpr02CBgJ1WCX3BQFjv4snz7gPDEDl1o5eK9LeNqGmUN6WYTqFIOpfOemTUIgbVbiFuwZsHuibidaDnkHFiDRCmdMDjUQy9FmAuGGVEnYSRxmR7P6j6nFpGSeKAUKtm.aWBLq0HfpZkwKF9U_Xn6S6MH-I45j_rIWmLSNhmu9G8`
+  Expires: `2022-06-12T10:34:01.1431098Z`
+  TokenHash: `ZATfHk8GKXVnB1I8fhsYefdPPRG4pGh7Dn4Oy+J+V8A=`
+  ParentUserClaims: null
+  UserClaims: { agg: ''; gtg: ''; prv: ''; xid: ''; uhs: '13494125591654531239' }
+  ChildAccountCreationToken: null
+}
+type BaseCookie = {
+  Token: `eyJlbmMiOiJBMTI4Q0JDK0hTMjU2IiwiYWxnIjoiUlNBLU9BRVAiLCJjdHkiOiJKV1QiLCJ6aXAiOiJERUYiLCJ4NXQiOiIxZlVBejExYmtpWklFaE5KSVZnSDFTdTVzX2cifQ.U5vIWx5cdqXCcp3GgY-hkchANavVPw43S2oyVgkZPD56OsUDIVYJDksFfw4T2acD4BO3Okf8zyyFj1xqrEDsGSwYV8Ix5utVgq7SHpi8vL11nD4GLuFCb8ZW2o-fofwWb_d4AFPacfEI-UznDgTEBrCyDI1baydQ3pCU9QGc870.h5FK6VLYS9GzsT9GO-8XFQ.xtlZeJzFJWiR0s9xA0jUMfJPKSO3mtIQ8WyddMFTURKp5_UYop15Qg6HhAiRqt9cH5nUYoMMkt1l4OtqiIO1u_jps0tdQbQ6R9sgsGFB_iZKp0Y1S9kfIHbs8jbL_NU80aUv1vh6JbXUHMb3dkleByp_QCiFttj0LIePmGqdJ5vv-qZGn56lWI4w0oAtknrmN1ybe_HuHPTszJtP1UA36T3-tp1_Zkm03ZR3c_kWrODDBvoSpKzUfdq6twxaTVVgV0aizvGd6ybCKbSH-ozJkvLIkv_nV9NsBvc93ZrWNI66oBddKezHKnFzOA90xyYgQeITm3SVsQUvwTkv4o6OgSapjYNjHJZpAj0Zlzd14CSf33VWKnClqvsa3mipU76N-X8azBf4bDNk-caZcdWjlEPwFWTU_7PRQVSIPwWriNkldfFXZeAZBjkc-mzlOJBD_mJgw3r8hR49IrDyXKvWjTEwMQmtsK36OGj8POOcK6hDF757I7XDO2q-5HlrFG-sk13_gYAAFuikBUh-UlUHm83T_bFxHHgkho8ia70XaS6wX6A31ItjXPSOzMxnJ5PUSVNm2Lm1QOSabOSG7NF4oUZATAVHm5PKs6nEjrUrTAkH5lvuF-pLUSl7a1Zn4p1p5x1n-m2_TG2Zp153uDIyymrLFwNd3xVcOovTpuGNR9Qs_7QUJ5V2NLRiiNA4wPPHAK-c9FfoC1DGCfTe-4Q_Vpqy5Utvt1d_upDXidgwo3XdFLSsueluTvA50dM_Q8JST8KpraLBuAPFzf181lNOfhRbgGumCS87a-xIpVpzp2umu3CJGVnSaRpZgAGrfdLsWk_3A43keq2ePm94PV2bqI8lpgFaq4EymPurX2SrPxlnK1pNJMyZjYiiHujXd9LrLlnEG80Lqmd2u9M2RlhKXgrCd1LuzB-VYSk0Nx-IBfaYAphGIOkV1e-aiBGhMD743zj5zXL-9v6q4qrbJ-4TdK8vwYd1CQLDPELb3ZlDMQvm2H_DlsNznckAmerXD5cTk8mWNEmvADTV4MgYC0RJgVWKjPwoSjItrBAIKMBQiulwBFuH3tzi0V9OanqDf93-eLBvneH1Hka7BuxYDk1m-5UscTf7x7i2dUZ8tBUXFOjqwX98hYBD6lwbVZ4aPI6vGRee1xmwDeIRLRrL7b7TeTmKlEG2VfvO1xrwtikmOKOQs4V-kRxz5W0Y37x9pcBVeNfKxJXemuTbBryAS5nU9_tQhvg4hn2l2QYQwQzEhKiXaOo8dy6unR-tmoHmGN3LN9fWr91aQzLVq3wTKvm6pBU3Cg7yi7xYJU5HnMSbohjGpQTkSlt4FduRd6lCmHtouM1dEjnYUJtiuMX3DhE9Q_QJKo2QZlS6UWr4TP_GCxQgoUQekFDPd5iitek4AoYcoySijbcHK0BSkf_zcl3HZmI7pQNK85_--F39pwIC_lWfHhVsvBHyURV1--UsKZTFSOI1PznvXwRjQHMD6wDMWg.B3G3OtrZziCk4tdD7kQU1jBJt5MtyXVok-C33QxIYUc`
+  Expires: `2022-06-12T10:34:01.1632223Z`
+  TokenHash: `ZATfHk8GKXVnB1I8fhsYefdPPRG4pGh7Dn4Oy+J+V8A=`
+  ParentUserClaims: null
+  UserClaims: {
+    agg: `Adult`
+    gtg: `sac396`
+    prv: `184+185+186+187+188+191+192+193+194+195+196+198+199+200+201+203+204+205+206+207+208+211+214+215+216+217+220+224+227+228+235+238+245+247+249+252+254+255`
+    xid: `2535458902090958`
+    uhs: `13494125591654531239`
+  }
+  ChildAccountCreationToken: null
+}
+type AccountsCookie = {
+  Token: `eyJlbmMiOiJBMTI4Q0JDK0hTMjU2IiwiYWxnIjoiUlNBLU9BRVAiLCJjdHkiOiJKV1QiLCJ6aXAiOiJERUYiLCJ4NXQiOiIxZlVBejExYmtpWklFaE5KSVZnSDFTdTVzX2cifQ.AXRrJ41ShSqvECJNQeF1AR69AgW5Ox0BBJtPlCSZbomOJ_4fnFGHtfghlqo89Hqq98uXvuZsWkHKvKBN7DxaeaQAgv2qk-uZ8YCKuwFsG-PNGNFsOtoyUpw5ly1hiYSUl91bh14-m8sq4na7mL5PdomcDLk4VOdm4kgJNLGUDNA.yJB2Y3GCuhW5sWGG5wIPag.mhj2KX7TbTnQ6PlH_zU3KrpYdUaEbw_rIbRX9U-wmbT5jmmQH0J9VCYv8dTiGtJgBkkMc2PCsTMHDoZKps1a7VWkRtyFaor4YKPF2PXpbQOKJMBHam74SNHBOdGPjuARDcUxeab0VVU9TtnKTEQ1nmeXOYPM5_AKUjpBDODkGCTRWv1IEqrHeunfSBpoBOs9xEK1OjCkAz5EC0yZ3Ka_J_jWCK8PFjlS07pd6Iyn_7Z1Sr499Sxjrc086509tQDG9IOk29dHayzsCRGYijvvXtUvDG3qE0mo4sThJhl50iuIxckRVEtnx_xwYhK1DiTOkW9BbqKIBFVwUeX7nr3Y96Rl6OZByKphyoLl1MzMkCtkqBLlRDazC0vk0cA8IeLJPjtFsIyQu6Tt5eM7stf9ywARrKcY5UVd5q9N71B8z6qp-VImsaKv7seMKiTLoWaM91bKsE0uDOcLZefSKius0wVbjPmLdtOUsKhfAGaLMoe0vUAz1R93HOzrngV2ghVQ8csSR6PjD7p8mdCtjEl2ykATThW61UZKuzLD6drCi-1VQk4-Y_Yg_TPGmK8QF4djQtU_rwCfQ1uH7rCjbvdwQSpSAKXCz-v-XtPk2kZGSDytIev457hrg8UrCLZUuFo3-KysvJklfwNnkhc8WCtZeposxIOO-7MBRQNoRKwH6Me2qx2CVZwodRFFHjDrOD0PqRp_GoWuoad0JN8pR6Zn5yL0obIH5Ig38BYBISRu4fPGvGZHdkEsHO9k-EEBdtmNaBseGRaEyXl7_tJFJoiUEcOWW8kaGmmWno-M4_4d9bZ8kYKDE_0-8wTVPluzxVBb-Em2Mji7POose1nS70vSYDCGZiSS_6j8jhK_rzIbNOKjxuPrSUdgOGeBwRskY2uIBh5XrtyKJLkZnRIdgvkd5sx93IrmQm8P3aPVoP2jGKtUMueuFDJA4gSvi7YSFOKgCwWqUzdRsISh8W4a0hBg87lukqnqlbeMsOb8a8nwRAslPkEmIzT-FtOKH9_T_cBtLfww62JHhDlSA1eTpJ9h-Q9x2vW6j-vBuJif4jGi15MdJ5JhGidQZ5yGK-NNndg9qhL-cRVJspWQ99vTvksPdUO4zdSd3KGUkuqkep9FsNo.AY0wWLg_ShM_yCb_wjWlD-5zGOuUBxu5j8fgTXAv_oM`
+  Expires: `2022-06-12T10:33:58.7835249Z`
+  TokenHash: `ZATfHk8GKXVnB1I8fhsYefdPPRG4pGh7Dn4Oy+J+V8A=`
+  ParentUserClaims: null
+  UserClaims: { agg: 'Adult'; gtg: ''; prv: ''; xid: ''; uhs: '13389336130167756174' }
+  ChildAccountCreationToken: null
+}
+
+/** used to fetch Friends List at xbox.com */
+type TokenObject = {
+  Token: string
+  Expires: string
+  TokenHash: string
+  ParentUserClaims: null
+  UserClaims: {
+    agg: string
+    gtg: string
+    prv: string
+    xid: string
+    uhs: string
+  }
+  ChildAccountCreationToken: null
+}
+
+const defaultToken: TokenObject = {
+  Token:
+    'eyJlbmMiOiJBMTI4Q0JDK0hTMjU2IiwiYWxnIjoiUlNBLU9BRVAiLCJjdHkiOiJKV1QiLCJ6aXAiOiJERUYiLCJ4NXQiOiIxZlVBejExYmtpWklFaE5KSVZnSDFTdTVzX2cifQ.klO8rk6mm7v_kWJ3CToGx8mspftEVZIwVbxyvxTNaljvlX1s3M7ogBvx7_4908fDtCtXmcc1rpfF77T0Zo-VNeaIsDF_Nda1tPT_8ibgy5sY53Ur6YogUfc89MKSZqM41CBvPicrYEkNMNQu5JouWIbzcyqvmaQaXp3SCvbtqFs.Al3rfFYjl8nvfV6tZp1TvQ.b7reVHQPkRU8XLGsbhSY_AF4Maff3ck7VKJCHbcoz6YMexX7GhEdXMMwT2PdF0q82a0auqbvz_kiWM23WmySFdZYSq3FK1_kEhS8WihuZ-nJT5pibbJtxDNmUF2rIgVWqFm7aImVEvgLlecA5GiG2DM0Hd2FRO2MazDbaj_UCXper0tFt4WyXSggoQlm2OkpT7frCm5GLLX2ppepE9IiUnqXxVEYQoc5k4zxYP8YCC6QUN2-167fn5if19wWvFKoJG15aKzYbw5pQpqLgCHwr634zoY4l3cEx0I9hIepwHAOP0udvkxqFsw5bjqNIoMGZTziX7hJpIDHfxP9VT50JSSWpZWrIqDXgZY073btXIMbxnboMT1pdAzvJP5ykTeh8X9aNcfs1uZSqfL9sAdVWf_xJOY8p-TM9kQd8KHiWBFoMbCn7qQb98Cv8ahtTd3MYS2yQ9QeADa5p5c-e7iKSfkSTqH3to-2o8Q_0TGGb0L_tPUGZqanG4t65m0kESBYHbVSzo4dhz2FzGRyB24Zo8uSM3nGUhf1BqhxJZchB62mX1i0iTtkc-Qa4maXZDhjneHsIlP9iGuuCyHyp7jc9HAbWxCqQTjBtWVoamcRp5GX4FSoPsWVJFCyPiXQj1fzPQnps93StQBwVUYbjL51ruJx7i48HPT4MZtz0mT9AM7BvssD0mB8OlrnGJLzPIPBf9k9JHO4Xttjj2yKhJr0SLS_k-g4XApId-XhQ3WMqIugXdQ8XbBRiy28JlskiN0SwxUUjgGTQ2gir4sCh048gz2ydSwe41QbImB0OkkER6TFIr7CVmnD0-w_Ps_AkzWuXWRMcX9qi_wwb8vre26HNQDF0kIVVgasu3iUgtA1q8Zf0Vn6cVDxBqa79tobnL_61YedL3uNExwtRQuyV_fBiry2613qfg12mbdmqOdZmqcj25wpy_pPRfC56zBugLAv9s5pOg_1qUnAoXY6Erc9xpCns0gFqVW7C4b0aJcxGttdywqVlgjY3FCJaqH3uklB4zFf4tPF6UaL3SkN9Y9Z-8zi7XsB9Olmv-667tapJWmitg2qhxfz9bWwO9ampzjXrSG9Xmiabuv3XP1vcrXvTzSRu4jdpS6Fs8BcrCrjy5yvxrCjzBhprCtXyaR1mDAgBFzjEoUIoD17fM7fCMi16PxErqCe3-jKF0iCrYoyKewr1uyeS03kTk2StrNnZBtK5gt5XwTedIJkndQBIBzH-mGtN-h0YvagI5VVqDMAv2C0c1hVphkGbt066SD2z9FQPhAsZVudP7UpLwIwW9UtCGqHR4phs3b_9dWSKZ1ESa0xMmKLtEl36tH5X46hcBwMSl9ArgUYubdteXf-4GAfyMmilziwCRiakEQdT-nP33VjwzWTQWhQtuvlz2LF1vw3tmyr24rokc1jevxldyMmij0V83saxKhIc8Pllb7xxqdMfNM_pJrIowxYrcAvMtjil-IjHVUXSLNDooIWTtiKaJye_nYiT17lQDUpvab7vbA.93PGrvbqTU46Sf8JOBkAIP48yk6G5WlTAHz13-Mh1YE',
+  Expires: '2022-06-12T09:51:06.5015038Z',
+  TokenHash: 'ZATfHk8GKXVnB1I8fhsYefdPPRG4pGh7Dn4Oy+J+V8A=',
+  ParentUserClaims: null,
+  UserClaims: {
+    agg: 'Adult',
+    gtg: 'sac396',
+    prv: '184+185+186+187+188+191+192+193+194+195+196+198+199+200+201+203+204+205+206+207+208+211+214+215+216+217+220+224+227+228+235+238+245+247+249+252+254+255',
+    xid: '2535458902090958',
+    uhs: '12257579151544217865'
+  },
+  ChildAccountCreationToken: null
+}
+
+const requestBody = {
+  FilterType: 0,
+  SearchText: '',
+  SuggestionFilter: 0,
+  SuggestionFilterSelected: false,
+  XboxTitleId: 0,
+  ShowMixerContent: false,
+  UseGamerTag: false,
+  OverrideFromQueryString: false,
+  ShowHeader: true,
+  ShowFilter: true,
+  ShowSearch: true,
+  ShowGroupHeaders: true,
+  EnableFriendFinder: true,
+  AllSuggestionFlag: false,
+  WebApiUrl: '/en-us/social/api/Friends?',
+  Layout: 0
+}
+
+const friends = async (
+  params: {
+    csrf: string
+    RPSSecAuth: string
+    /** what you want in the response */
+    body?: typeof requestBody
+  },
+  mimickChromium = false
+) => {
+  const { body = requestBody, csrf, RPSSecAuth } = params
+
+  return await (
+    await fetch('https://account.xbox.com/en-us/social/api/Friends?', {
+      headers: {
+        __requestverificationtoken: csrf,
+        Cookie: `csrf=token=${csrf}; RPSSecAuth=${RPSSecAuth}`,
+        'onerf-spa': '1'
+      },
+      body: JSON.stringify(body),
+      method: `POST`
+    })
+  ).json()
+}
+
+main()
+async function main() {
+  writeFileSync(path.join(__dirname, './result.json'), JSON.stringify(await friends({
+    csrf: 'zAntfodLo6BBq88l6AViGMYgEfsQ0Ro3Yf1c0k8XciLY1whwyDpXcU9GQqZuXIgtwfJx63gVRXB39C4e3YOwHPe75cc1',
+    RPSSecAuth: 'FADCBxR/eYE3tsXPBuEn8O2pHDvCk/0fTgNmAAAEgAAACLMurmRuauKwgAcYrtgQzlcgR5fkAKFlb6ACDVlg2o9J5p%2BX2/03IahEFcjXp2LkstcjteVmHhJYlQ1I%2B4Qhr0%2BwjgEtwWwuynaDPogh7kUug02D9a3WvpfkODLPYoyreDdpNOA18GKRry2K58kf5cvm5pH6y2rb2NinM3I//MZmrLQO9vYKTEaaxpEN9nuzY/OPUgy8JuOFYK3FLuwTTYOifw37uab4Mt6AMYqLMqymjDPhOLZhf0RKS616GBQWcbqjk3wwJ4A1WSjqRmO3fsaBrpEnQxakU7Uh8FkQp4erLnlIemi2uagf94Ngeb2jTgy8gzqT7U5uON2fOGyopHv83i789mv1VwSX7n/kVMdHaCcp7FJgd89NDSEs39t%2BZBd6nNfWSMvjXpXtSaZpNXkEgxlOXx%2BMuqwwZCT4QjV%2BdI7yQtZKvEf7Oz12NhQj1qO5vTFx4gaz6NrbRnnqUd8YxZ9U0592EA4IAOllFPJLWFNTDf4Wdq3ysV6sLuf0PS8GgbqQWVnuJk4zrJetEwskPmVjmvSDEm4M1NRpKdHT56iBIbFa%2BV/JdqmfasW5QJDBd6zB6FP%2Bp7Y4LdnxTbDjI%2BsrX1jkJT/UOhdP54JOcUmqp931Xtnj2rm2Cmam5%2BEVvZMqGzs3z0bdaIn7ECoIY%2BC1lyBWUbmaQl%2BO11ZrVUG%2BZbYwTGwnXAlsKcvX/9vsL1PeION32SUf11ilTasTigb3ugg0cD/5usc21%2BZPAYzB2JmhxycirH3l3ZoQQCVqMCvpmC7maWIdGkYmAVTyf6gTfaEMNNk377mM2EM%2BcMojTgx8b7MkcTIEY7c9M81CMbgxQKou7DpPxy5IZ0BDmH/%2BpalzSrtQ6x4MqtrrcKPZuMsmWg%2BtIJZCmcXw2YFnK5%2BRd4SbYCvMKIX4EDn7jPEvfeuUI4x/AaXGpBk053uQtsBymGApondkBg%2BZk7hxg1aNDLXUCn07%2Bpu49HTabzkX7CG7l4qhb/lfHblH5tJGIxui1i7PvYK1nnSy91Ggl1sO0E8%2BiPLvoH060p496XsA%2BZg5uAqLL88jZcvoGdh%2BVVY7xh2QL1u4qWtW01pNBrHX4gJv/qbmUQTALO/OIvOaXFXXOAjlHVX4dY5OD0AyEz8cDsbfThCv3RHGhTZ6IqXnWcVlTImKQQuWURJCMoUSzNkUNsUNMMRvLnLhC1IOwSer2xu0Y6%2BYAzLKDAq%2B7phhx9AwEw3f5qZpg3ApKQP1ulJ%2Bag4vVvpQV4Rm/oEF82lVLu5BwfdLFkGkFkIeGDyymEogTcSDa%2BdvKii5HT0owbqu80dHS4KhhDC3HrdAIQnEDUnflyd1jlrH1uAPRBwgV10WqhuE8oAyseXNevrjWJD%2BITTYAor%2BlHdzz8ZBfBPmDzJoobPfke73f4qOlJON2ncNZuzdr2bsuMyOU3BRIIMdAVBHDKix6E%2BSYCPlf67YX/N%2BC95WmC8IJeOq0fGM6UJJnrKpFjjWeeGNsLkDTuLC5efwaESB5/%2BgiYrSvtfJQarvhlhnnRwXBNyIcp0Aq271GWFe2TDEtq3zaUOKaoK6gqqIUcJ3Jmc17%2B1o9fgRvKvgf4FDIqSLpORgsg6VsiCFe5L4fdMNElN5geSHuqBCjGrfSIv0oiDvRH8jU20uOE0YvCw8%2BZj8kAJnrCk3XUetXBLFIipyVG2mTLLcqXWcp6Ro1876VuMpzs8l7D9ARD8Z2f0XV%2ByPVyvtxKM%2BxIQDlXeBGkzCQQYhMj2EsZoojFPTxvOBtU1o48X6siA3UxymZwvNRVuo4kRKwzPw6mSqTMr3IHZ%2Bi%2BCoDv7j181dGOks5nLubj0HXqvsUW/Kwy7EJy5ac6x%2Bn4tDIhUGJ7NqrGwt7RC/KNUs6G1DOIZoiTOwkMFjtQ7Y2ohEz5n5rz2r3vTH01Rmw8dV9TjncIaQ2C7y843iRIEDpwCaIYP2ESFtwjqIb4z6TkdiDFeMORDEr8nWBlQsr0Az0yA/%2BJL8wUDKVYs2o5xeszwiDygNbc6BJDqOyZEFZttMoUcBJ5v7EmiZ9SceRm8rbeLS8%2BCwSP/O2j0Gyap0V9yJNliQQS0d8jdtEZ6VYpn7bmaXfctw/NYaq/6iNGGfAVVAGbi7Ta29gE4Ciq2HBQl67fyrLaWgQFHD88shTba7w0l%2BbKfu2roPwNt6UVitddj4FurEetF16cZQ2Z36NdSto/4EkZ1mSFdoUKAU9wLwIuLWWOwPnpAap8L2HW66kYdQ1%2BPAJVFozS6Kf8fVzjKKyihz8Y2n0LRQYVoUkyIYo/iCGSRxUwh6zO8kCfDcBhrtucr%2B5NU%2BtaxYq5OLu0434i%2B4J09YDmQLRu5hMsJ15rPM32zpJXmSYniVmDEc3zrzK4kPB6TnXJkwuL/8eWzxVZ%2BiEg9%2BHzz7Hka2XKUlNIYwCA2aYajb2v5KXLT68IwjE7W3fA7IChgJFM0CqPxJqtAcNbqfna8KxWueVBfJvTZFswMPhd3/UJ2mRLdU%2BClqOlp/oB3evlFlwnyGs0l6rC1D/WWRjWTILiaOGneBgudZ38sNCE3%2BjcM%2BZiXPKhyr%2Bdd82qIUAA74IvEh/Sn2KnoFI5VF5jxlrbAq'
+  })))
+}
