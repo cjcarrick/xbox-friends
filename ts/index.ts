@@ -1,5 +1,5 @@
 import { formatDistanceToNowStrict } from 'date-fns'
-import { SearchResults, Friends, Presence } from './xblio'
+import { SearchResults, Friends, Presence, Account } from './xblio'
 import express, { Request, Response } from 'express'
 import fetch from 'cross-fetch'
 import dotenv from 'dotenv'
@@ -28,6 +28,7 @@ express()
       console.log('attempting to find xuid by gamertag "' + req.query.gt + '"')
       try {
         xuid = await getXuid(req.query.gt.toString())
+        console.log(req.query)
         return res.redirect(`/?xuid=${xuid}&${queryStr(req.query)}`)
       } catch (e) {
         console.error(e)
@@ -38,7 +39,7 @@ express()
     if (xuid) {
       return await friendsPage(req, res)
     } else {
-      return searchPage(req, res)
+      return res.send(searchTemplate({ options: options(req) }))
     }
   })
   .listen(process.env.PORT || 8080, () => console.log('server started'))
@@ -62,11 +63,18 @@ async function getXuid(gamertag: string) {
 
 /** The object that pug expects. Defined here to ensure consistency. */
 type FriendsObject = {
-  people: {
-    name?: string
-    img?: string
-    status?: 'Online' | 'Offline'
+  self: {
+    name: string
+    img: string
+    state: 'Online' | 'Offline'
     rich?: string
+    url: string
+  }
+  friends: {
+    name: string
+    img: string
+    state: 'Online' | 'Offline'
+    rich: string
     url: string
   }[]
 }
@@ -75,27 +83,31 @@ type FriendsObject = {
 const options = (req: Request) => ({
   sortOrder: req.query.sortOrder || 'lastOnline',
   indicatorStyle: req.query.indicatorStyle || 'border',
-  onlineOnly: req.query.onlineOnly,
-  games: req.query.games,
-  lastSeenTime: req.query.lastSeenTime,
-  playingTime: req.query.playingTime,
-  icons: req.query.iconse
+  onlineOnly: req.query.onlineOnly || 'off',
+  games: req.query.games || 'on',
+  lastSeenTime: req.query.lastSeenTime || 'on',
+  playingTime: req.query.playingTime || 'on',
+  icons: req.query.iconse || 'on',
+  showSelf: req.query.showSelf || 'on'
 })
-
-function searchPage(req: Request, res: Response) {
-  return res.send(searchTemplate(options(req)))
-}
 
 async function friendsPage(req: Request, res: Response): Promise<void> {
   const {
-    xuid,
     onlineOnly = false,
-    games = true,
-    lastSeenTime = true,
-    playingTime = true,
-    icons = true,
-    sortOrder = 'lastOnline'
-  } = req.query
+    games = false,
+    lastSeenTime = false,
+    playingTime = false,
+    icons = false,
+    sortOrder,
+    showSelf = false
+  } = Object.fromEntries(
+    Object.entries(options(req)).map(([k, v]) => {
+      v = v.toString()
+      return [k, v == 'on' ? true : v == 'off' ? false : v]
+    })
+  )
+
+  const { xuid } = req.query
 
   console.log(`[XUID ${xuid}] Searching for friends`)
   if (!xuid) {
@@ -104,24 +116,86 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
 
   let peopleList: Friends['people']
   let presenceList: Presence
+  let selfData: Account
 
   try {
+    if (showSelf) selfData = (await (await fetch('https://xbl.io/api/v2/account/' + xuid, { headers })).json()) as Account
+
     peopleList = ((await (await fetch('https://xbl.io/api/v2/friends?xuid=' + xuid, { headers })).json()) as Friends).people
     console.log(`[XUID ${xuid}] Found ${peopleList.length} friends`)
 
-    presenceList = (await (await fetch(`https://xbl.io/api/v2/${peopleList.map(p => p.xuid)}/presence`, { headers })).json()) as Presence
+    // Get presence data for the friends list, and us if we are going to draw outself on the page
+    const xuids = showSelf ? [selfData.profileUsers[0].id, ...peopleList.map(p => p.xuid)] : peopleList.map(p => p.xuid)
+    presenceList = (await (await fetch(`https://xbl.io/api/v2/${xuids}/presence`, { headers })).json()) as Presence
     if (!presenceList.length) throw new Error('No presence data')
     console.log(`[XUID ${xuid}] Found ${presenceList.length} presence records`)
   } catch (e) {
-    return res.redirect('/?' + queryStr({ ...options(req), error: 'Could not find presence records. Please try again.' }))
+    return res.redirect('/?' + queryStr({ options: options(req), error: 'Could not find presence records. Please try again.' }))
   }
 
-  const people: {
-    name?: string
-    img?: string
-    status?: 'Online' | 'Offline'
-    rich?: string
-  }[] = []
+  /**
+   * Determines the rich presence of a player, respecting the user's preferences.
+   *
+   * This function may find when they were last online, what they are doing in a specific game right now, or an empty string if nothing
+   * could be determined.
+   */
+  const richPresenceText = (p: Presence[number]): string => {
+    if ('lastSeen' in p) {
+      if (p.lastSeen.titleName == 'Home' || p.lastSeen.titleName == 'Online') {
+        return lastSeenTime ? `Last seen ${formatDistanceToNowStrict(new Date(p.lastSeen.timestamp))} ago` : ''
+      } else {
+        if (games && p.lastSeen.titleName) {
+          return `Last seen ${lastSeenTime ? formatDistanceToNowStrict(new Date(p.lastSeen.timestamp)) + ' ago' : ''} on ${
+            p.lastSeen.titleName
+          }`
+        } else {
+          return lastSeenTime ? `Last seen ${formatDistanceToNowStrict(new Date(p.lastSeen.timestamp))} ago` : ''
+        }
+      }
+    } else if ('devices' in p) {
+      let totalTimeOnline = 0
+      const activeGames = p.devices
+        .map(d =>
+          d.titles
+            .map(t => {
+              const time = formatDistanceToNowStrict(new Date(t.lastModified))
+
+              // Filter out "Home" and "Online" titles
+              if (t.name == 'Home' || t.name == 'Online' || !t.name) {
+                if (totalTimeOnline < new Date(t.lastModified).getTime()) {
+                  totalTimeOnline = new Date(t.lastModified).getTime()
+                }
+              } else {
+                return [games && `On ${t.name}${'activity' in t ? `, ${t.activity.richPresence}` : ''}`, playingTime && `for ${time}`]
+                  .filter(a => a)
+                  .join(' ')
+              }
+            })
+            .filter(a => a)
+            .join(', ')
+        )
+        .join(', ')
+      return playingTime && totalTimeOnline
+        ? `Online for ${formatDistanceToNowStrict(new Date(totalTimeOnline))}${activeGames ? ', ' + activeGames : ''}`
+        : activeGames
+    } else {
+      return ''
+    }
+  }
+
+  const selfPresenceData = selfData && presenceList.find(p => p.xuid == selfData.profileUsers[0].id)
+  const result: FriendsObject = {
+    self: showSelf
+      ? {
+          name: selfData.profileUsers[0].settings.find(s => s.id == 'Gamertag').value,
+          img: selfData.profileUsers[0].settings.find(s => s.id == 'GameDisplayPicRaw').value,
+          state: selfPresenceData.state,
+          url: req.url,
+          rich: richPresenceText(selfPresenceData)
+        }
+      : undefined,
+    friends: []
+  }
 
   type Sorter = (a: Presence[number], b: Presence[number]) => number
 
@@ -130,7 +204,7 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
     name(a, b) {
       const friendA = peopleList.find(p => p.xuid == a.xuid)
       const friendB = peopleList.find(p => p.xuid == b.xuid)
-      return friendA.displayName.localeCompare(friendB.displayName)
+      return (friendA?.displayName || '').localeCompare(friendB?.displayName || '')
     },
 
     game: (a, b) => {
@@ -210,7 +284,7 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
     sortBy.ifLastSeenAvalible(a, b) ||
     sortBy.lastSeenTime(a, b) ||
     // by this point both players should be online
-    sortBy.ifPlaytimeAvalible(a, b) ||
+    sortBy.ifPlayTimeAvalible(a, b) ||
     sortBy.name(a, b) ||
     0
 
@@ -229,51 +303,25 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
     console.warn(`[XUID ${xuid}] Sort order "${sortOrder}" is not supported.`)
   }
 
-  presenceList.sort(sortFn).forEach(p => {
-    if (p.state == 'Offline' && onlineOnly) return
-    const listDat = peopleList.find(f => f.xuid === p.xuid)
+  presenceList
+    // Remove ourselves from the list of friends.
+    // We got it in the request before so we could draw ourselves at the top of the page.
+    // But now, we are drawing a list of our friends and don't need this.
+    .filter(p => p.xuid !== xuid)
 
-    const obj: FriendsObject['people'][number] = {
-      name: listDat.displayName,
-      img: icons ? listDat.displayPicRaw : '',
-      status: p.state,
-      url: `/?xuid=${p.xuid}&${queryStr(options(req))}`
-    }
+    .sort(sortFn)
+    .forEach(p => {
+      if (p.state == 'Offline' && onlineOnly) return
+      const listDat = peopleList.find(f => f.xuid === p.xuid)
 
-    if ('lastSeen' in p) {
-      // Filter out "Home" and "Online" titles
-      if (p.lastSeen.titleName == 'Home' || p.lastSeen.titleName == 'Online') {
-        obj.rich = lastSeenTime ? `Last seen ${formatDistanceToNowStrict(new Date(p.lastSeen.timestamp))} ago` : ''
-      } else {
-        if (games && p.lastSeen.titleName) {
-          obj.rich = `Last seen ${lastSeenTime ? formatDistanceToNowStrict(new Date(p.lastSeen.timestamp)) + ' ago' : ''} on ${
-            p.lastSeen.titleName
-          }`
-        } else {
-          obj.rich = lastSeenTime ? `Last seen ${formatDistanceToNowStrict(new Date(p.lastSeen.timestamp))} ago` : ''
-        }
-      }
-    } else if ('devices' in p) {
-      p.devices.forEach(d => {
-        // use the last title to determine how long this person was online because the first title changes when they start doing something different within the game, and that resets the timestamp.
-        const onlineTime = formatDistanceToNowStrict(new Date(d.titles[d.titles.length - 1].lastModified))
-
-        // Filter out "Home" and "Online" titles
-        if (d.titles[0].name == 'Home' || d.titles[0].name == 'Online') {
-          obj.rich = playingTime ? `Online for ${onlineTime}` : ''
-        } else {
-          obj.rich = [
-            games && `On ${d.titles[0].name}${'activity' in d.titles[0] ? `, ${d.titles[0].activity.richPresence}` : ''}`,
-            playingTime && `for ${onlineTime}`
-          ]
-            .filter(a => a)
-            .join(', ')
-        }
+      result.friends.push({
+        name: listDat.displayName,
+        img: icons ? listDat.displayPicRaw : '',
+        state: p.state,
+        url: `/?xuid=${p.xuid}&${queryStr(options(req))}`,
+        rich: richPresenceText(p) || richPresenceText(p) || ''
       })
-    }
+    })
 
-    people.push(obj)
-  })
-
-  res.send(friendsTemplate({ people, ...options(req) }))
+  res.send(friendsTemplate({ result, options: options(req) }))
 }

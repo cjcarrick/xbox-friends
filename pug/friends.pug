@@ -1,15 +1,26 @@
 extends index 
 
-block content 
-  each p in people
-    a.card(class=(indicatorStyle == 'both' || indicatorStyle == 'border') ? p.status : '' href=p.url)
-      if p.img
-        //- backup image
-        object(data=p.img type="image/png")
-          img(src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png")
-      .text 
-        h2= p.name 
-        if (indicatorStyle == 'both' || indicatorStyle == 'text')
-          h4= p.status 
-        if (p.rich)
-          p= p.rich
+mixin card(p)
+  if p.img
+    //- backup image
+    object(data=p.img type="image/png")
+      img(src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png")
+  .text 
+    h2= p.name 
+    if (options.indicatorStyle == 'both' || options.indicatorStyle == 'text')
+      h4= p.state 
+    if (p.rich)
+      p= p.rich
+
+
+block content
+  if result.self
+    .card.self(class=(options.indicatorStyle == 'both' || options.indicatorStyle == 'border') ? result.self.state : '')
+      +card(result.self)
+
+    hr
+
+  if result.friends.length
+    each f in result.friends
+      a.card(class=(options.indicatorStyle == 'both' || options.indicatorStyle == 'border') ? f.state : '' href=f.url)
+        +card(f)

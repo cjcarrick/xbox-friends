@@ -67,28 +67,28 @@ type Friends = {
   }[]
 }
 type Presence = ({
-  /** eg: `2535467737715406` */
+  /** Eg: `2535467737715406` */
   xuid: string
 } & (
   | {
       state: 'Online'
       devices: {
-        /** eg: `WindowsOneCore` */
+        /** Eg: `WindowsOneCore` */
         type: string
         titles: {
           activity?: {
-            /** eg: `Onboarding` */
+            /** Eg: `Onboarding` */
             richPresence: string
           }
-          /** eg: `1777860928` */
+          /** Eg: `1777860928` */
           id: string
-          /** eg: `Full` */
+          /** Eg: `Full` */
           placement: string
-          /** eg: `Active` */
+          /** Eg: `Active` */
           state: string
-          /** eg: `Microsoft Flight Simulator` */
+          /** Eg: `Microsoft Flight Simulator` */
           name: string
-          /** eg: `2022-06-05T23:41:50.8148827Z` */
+          /** Eg: `2022-06-05T23:41:50.8148827Z` */
           lastModified: string
         }[]
       }[]
@@ -104,4 +104,25 @@ type Presence = ({
     }
 ))[]
 
-export { SearchResults, Friends, Presence }
+type Account = {
+  profileUsers: [
+    {
+      id: string
+      hostId: string
+      settings: [
+        { id: 'GameDisplayPicRaw'; value: string },
+        { id: 'Gamerscore'; value: string },
+        { id: 'Gamertag'; value: string },
+        { id: 'AccountTier'; value: string },
+        { id: 'XboxOneRep'; value: string },
+        { id: 'PreferredColor'; value: string },
+        { id: 'RealName'; value: string },
+        { id: 'Bio'; value: string },
+        { id: 'Location'; value: string }
+      ]
+      isSponsoredUser: boolean
+    }
+  ]
+}
+
+export { SearchResults, Friends, Presence, Account }
