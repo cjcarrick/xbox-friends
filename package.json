@@ -5,7 +5,7 @@
     "node": ">=17.9.0"
   },
   "scripts": {
-    "dev": "export NODE_ENV=development && nodemon --ext js,scss dist/index.js",
+    "dev": "export NODE_ENV=development && nodemon --inspect --ext js,scss dist/index.js",
     "start": "export NODE_ENV=production && node dist/index.js",
     "build": "export NODE_ENV=production && webpack && sass --no-source-map -s compressed scss/style.scss:dist/static/style.css",
     "watch": "export NODE_ENV=development && webpack --watch & sass --no-source-map -s compressed --watch scss/style.scss:dist/static/style.css"
