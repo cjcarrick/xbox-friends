@@ -25,7 +25,6 @@ yarn && yarn watch & yarn dev
 - [x] Add fallbacks for profile pictures that fail to load on the DOM
 - [x] Alphabetize the friends list
   - [x] Add more sorting functions
-- [ ] Add an option to downscale images before they are loaded by the user. This is useful because the raw images are quite large and take a while to load.
+- [x] Add an option to downscale images before they are loaded by the user. This is useful because the raw images are quite large and take a while to load.
 
 - [ ] Find a faster API
-  - [ ] Perhaps one that can get gamerpics for users with avatars as their profile picture. Xbl.io doesn't have images for these

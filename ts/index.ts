@@ -61,22 +61,18 @@ async function getXuid(gamertag: string) {
   }
 }
 
+type PersonStatus = {
+  name: string
+  img: string
+  state: 'Online' | 'Offline'
+  rich?: string
+  url: string
+}
+
 /** The object that pug expects. Defined here to ensure consistency. */
 type FriendsObject = {
-  self: {
-    name: string
-    img: string
-    state: 'Online' | 'Offline'
-    rich?: string
-    url: string
-  }
-  friends: {
-    name: string
-    img: string
-    state: 'Online' | 'Offline'
-    rich: string
-    url: string
-  }[]
+  self: PersonStatus
+  friends: PersonStatus[]
 }
 
 /** Gets the user's options from URL params */
@@ -187,12 +183,16 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
     }
   }
 
+  /** Extracts the image src from a gamerrpic's url, and replcaes its width, height, and format attributes */
+  const imgSrc = (origSrc: string, size = 64, format = 'jpg') =>
+    `${origSrc.match(/.*\/image/)}?url=${origSrc.match(/(?<=[&?]url=).*?(?=&|$)/)}&format=${format}&w=${size}&h=${size}`
+
   const selfPresenceData = selfData && presenceList.find(p => p.xuid == selfData.profileUsers[0].id)
   const result: FriendsObject = {
     self: showSelf
       ? {
           name: selfData.profileUsers[0].settings.find(s => s.id == 'Gamertag').value,
-          img: selfData.profileUsers[0].settings.find(s => s.id == 'GameDisplayPicRaw').value,
+          img: imgSrc(selfData.profileUsers[0].settings.find(s => s.id == 'GameDisplayPicRaw').value),
           state: selfPresenceData.state,
           url: req.url,
           rich: richPresenceText(selfPresenceData)
@@ -320,7 +320,7 @@ async function friendsPage(req: Request, res: Response): Promise<void> {
 
       result.friends.push({
         name: listDat.displayName,
-        img: icons ? listDat.displayPicRaw : '',
+        img: icons ? imgSrc(listDat.displayPicRaw) : '',
         state: p.state,
         url: `/?xuid=${p.xuid}&${queryStr(options(req))}`,
         rich: richPresenceText(p) || richPresenceText(p) || ''
